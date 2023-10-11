@@ -1,13 +1,15 @@
 use super::{Match, MatchDay};
+use async_trait::async_trait;
 
 pub struct TestHunter;
 
+#[async_trait]
 impl super::Hunter for TestHunter {
     fn name(&self) -> String {
         String::from("Test Hunter")
     }
 
-    fn find_matches(&self) -> crate::Result<Vec<Match>> {
+    async fn find_matches(&self) -> crate::Result<Vec<Match>> {
         let matches = vec![Match {
             day: MatchDay {
                 index: 0,

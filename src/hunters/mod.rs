@@ -1,10 +1,13 @@
+use async_trait::async_trait;
 use std::sync::Arc;
 
 use crate::{error::Error, Result};
 
-use self::test_hunter::TestHunter;
+use self::sky::SkyHunter;
+use self::test::TestHunter;
 
-pub mod test_hunter;
+mod sky;
+mod test;
 
 #[derive(Debug)]
 pub struct MatchDay {
@@ -19,14 +22,19 @@ pub struct Match {
     pub team2: String,
 }
 
+#[async_trait]
 pub trait Hunter: Send + Sync {
     fn name(&self) -> String;
-    fn find_matches(&self) -> Result<Vec<Match>>;
+    async fn find_matches(&self) -> Result<Vec<Match>>;
 }
 
 pub fn create_hunter(name: &str) -> Result<Arc<dyn Hunter>> {
     if name == "test" {
         return Ok(Arc::new(TestHunter));
+    }
+
+    if name == "sky" {
+        return Ok(Arc::new(SkyHunter::new()?));
     }
 
     Err(Error::HunterNotFound(String::from(name)))

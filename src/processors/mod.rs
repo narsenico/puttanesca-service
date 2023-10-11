@@ -1,15 +1,17 @@
+use async_trait::async_trait;
 use std::sync::Arc;
 
 use crate::{error::Error, hunters::Hunter, Result};
 
 use self::{console::ConsoleProcessor, sqlite::SqliteProcessor};
 
-pub mod console;
-pub mod sqlite;
+mod console;
+mod sqlite;
 
+#[async_trait]
 pub trait Processor {
     fn name(&self) -> String;
-    fn process(&self, hunter: Arc<dyn Hunter>) -> Result<()>;
+    async fn process(&self, hunter: Arc<dyn Hunter>) -> Result<()>;
 }
 
 pub fn create_processor(name: &str) -> Result<Arc<dyn Processor>> {

@@ -1,4 +1,5 @@
 use crate::Result;
+use async_trait::async_trait;
 use rusqlite::{Connection, OpenFlags};
 
 use super::Processor;
@@ -13,12 +14,13 @@ impl SqliteProcessor {
     }
 }
 
+#[async_trait]
 impl Processor for SqliteProcessor {
     fn name(&self) -> String {
         String::from("Sqlite Processor")
     }
 
-    fn process(&self, hunter: std::sync::Arc<dyn crate::hunters::Hunter>) -> Result<()> {
+    async fn process(&self, hunter: std::sync::Arc<dyn crate::hunters::Hunter>) -> Result<()> {
         todo!()
     }
 }

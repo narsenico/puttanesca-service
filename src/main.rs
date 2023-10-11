@@ -35,18 +35,19 @@ fn list() -> Result<()> {
     Ok(())
 }
 
-fn hunt(hunter_name: String, processor_name: String) -> Result<()> {
+async fn hunt(hunter_name: String, processor_name: String) -> Result<()> {
     let hunter = create_hunter(&hunter_name)?;
     let processor = create_processor(&processor_name)?;
 
-    processor.process(hunter)
+    processor.process(hunter).await
 }
 
-fn main() -> Result<()> {
+#[tokio::main]
+async fn main() -> Result<()> {
     let args = Args::parse();
 
     match args.command {
         Commands::List => list(),
-        Commands::Hunt { hunter, processor } => hunt(hunter, processor),
+        Commands::Hunt { hunter, processor } => hunt(hunter, processor).await,
     }
 }
