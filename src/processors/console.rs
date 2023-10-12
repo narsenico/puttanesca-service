@@ -14,10 +14,7 @@ impl Processor for ConsoleProcessor {
     async fn process(&self, hunter: std::sync::Arc<dyn crate::hunters::Hunter>) -> Result<()> {
         let matches = hunter.find_matches().await?;
         for m in matches {
-            println!(
-                "Match #{} {}: {} vs {}",
-                m.day.index, m.day.date, m.team1, m.team2
-            );
+            println!("{}", m);
         }
 
         Ok(())
