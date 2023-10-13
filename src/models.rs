@@ -3,10 +3,10 @@ use std::fmt::Display;
 
 // TODO: manage date and time format (with struct?)
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, PartialEq)]
 pub struct Match {
     pub match_day: usize,
-    pub date: String,
+    pub match_date: String,
     pub team1: String,
     pub team2: String,
     pub team1_score: Option<usize>,
@@ -19,7 +19,7 @@ impl Display for Match {
             f,
             "Match #{} {}: {} vs {} ({} - {})",
             self.match_day,
-            self.date,
+            self.match_date,
             self.team1,
             self.team2,
             self.team1_score

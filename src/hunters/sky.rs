@@ -59,7 +59,7 @@ impl PartialMatch {
     fn create_match(self, index: usize, date: &str) -> Match {
         Match {
             match_day: index,
-            date: String::from(date),
+            match_date: String::from(date),
             team1: self.team1,
             team2: self.team2,
             team1_score: self.team1_score,

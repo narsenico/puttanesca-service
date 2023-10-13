@@ -1,5 +1,5 @@
-use crate::{models::Match, hunters::Hunter};
 use crate::Result;
+use crate::{hunters::Hunter, models::Match};
 use async_trait::async_trait;
 use rusqlite::{Connection, OpenFlags, OptionalExtension};
 
@@ -122,7 +122,7 @@ fn upsert_match(conn: &Connection, match_: &Match) -> Result<()> {
         sql_match_insert,
         (
             match_.match_day,
-            &match_.date,
+            &match_.match_date,
             &match_.team1,
             &match_.team2,
             match_.team1_score,
@@ -131,4 +131,120 @@ fn upsert_match(conn: &Connection, match_: &Match) -> Result<()> {
     )?;
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use std::path::Path;
+
+    use rusqlite::{Connection, OpenFlags};
+
+    use crate::{
+        models::Match,
+        processors::sqlite::{get_version, prepare_db, VERSION},
+    };
+
+    use super::{check_valid_connection, upsert_match};
+
+    #[test]
+    fn check_valid_connection_success() {
+        // Arrange
+        let conn = Connection::open_in_memory().unwrap();
+
+        // Act
+        let valid = check_valid_connection(&conn);
+
+        // Assert
+        assert!(valid.is_ok());
+    }
+
+    #[test]
+    fn check_valid_connection_failure() {
+        // Arrange
+        let path = Path::new("./Cargo.lock"); // wrong file, it is not a valid db3 file
+        let conn = Connection::open_with_flags(
+            path,
+            OpenFlags::SQLITE_OPEN_READ_WRITE | OpenFlags::SQLITE_OPEN_NO_MUTEX,
+        )
+        .unwrap();
+
+        // Act
+        let valid = check_valid_connection(&conn);
+
+        // Assert
+        assert!(valid.is_err());
+    }
+
+    #[test]
+    fn prepare_db_success() {
+        // Arrange
+        let conn = Connection::open_in_memory().unwrap();
+        prepare_db(&conn).unwrap();
+
+        // Act
+        let version = get_version(&conn).unwrap().unwrap();
+
+        // Assert
+        assert_eq!(version, VERSION);
+    }
+
+    #[test]
+    fn prepare_db_failure() {
+        // Arrange
+        let conn = Connection::open_in_memory().unwrap();
+
+        // Act
+        // table tVersion not exists
+        let version = get_version(&conn).unwrap();
+
+        // Assert
+        assert!(version.is_none());
+    }
+
+    #[test]
+    fn upsert_match_success() {
+        // Arrange
+        let conn = Connection::open_in_memory().unwrap();
+        prepare_db(&conn).unwrap();
+        let matches = vec![
+            Match {
+                match_day: 2,
+                match_date: "2000-01-01".to_string(),
+                team1: "Blue".to_string(),
+                team2: "Red".to_string(),
+                team1_score: None,
+                team2_score: None,
+            },
+            Match {
+                match_day: 2,
+                match_date: "2000-01-02".to_string(),
+                team1: "Blue".to_string(),
+                team2: "Red".to_string(),
+                team1_score: None,
+                team2_score: None,
+            },
+        ];
+
+        // Act
+        // second match overwrites first
+        for m in matches.iter() {
+            upsert_match(&conn, &m).unwrap();
+        }
+
+        // Assert
+        let m = conn.query_row(
+            "SELECT match_day,match_date,team1,team2,team1_score,team2_score FROM tMatches",
+            (),
+            |row| Ok(Match {
+                match_day: row.get(0).unwrap(),
+                match_date: row.get(1).unwrap(),
+                team1: row.get(2).unwrap(),
+                team2: row.get(3).unwrap(),
+                team1_score: row.get(4).unwrap(),
+                team2_score: row.get(5).unwrap(),
+            }),
+        )
+        .unwrap();
+        assert_eq!(*matches.get(1).unwrap(), m);
+    }
 }
