@@ -18,7 +18,7 @@ pub fn create_processor(name: &str) -> Result<Arc<dyn Processor>> {
     if name == "console" {
         return Ok(Arc::new(ConsoleProcessor));
     } else if name.starts_with("sqlite") {
-        let db_name = match name.split(':').skip(1).next() {
+        let db_name = match name.split(':').nth(1) {
             Some(name) => name,
             None => Err(Error::ProcessorError(String::from(
                 r#"expected "sqlite:<dbname>""#,
@@ -28,5 +28,5 @@ pub fn create_processor(name: &str) -> Result<Arc<dyn Processor>> {
         return Ok(Arc::new(p));
     }
 
-    Err(Error::HunterNotFound(String::from(name)))
+    Err(Error::ProcessorNotFound(String::from(name)))
 }

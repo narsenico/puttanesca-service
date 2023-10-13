@@ -9,6 +9,10 @@ use select::{
 };
 use std::time::Duration;
 
+static MONTHS: [&str; 12] = [
+    "Gen", "Feb", "Mar", "Apr", "Mag", "Giu", "Lug", "Ago", "Set", "Ott", "Nov", "Dic",
+];
+
 pub struct SkyHunter {
     http_client: Client,
 }
@@ -33,7 +37,6 @@ impl super::Hunter for SkyHunter {
         let http_res = self.http_client.get(url).send().await?.text().await?;
 
         let document = Document::from(http_res.as_str());
-        // div[data-intersect]
         let divs = document.find(Name("div").and(Attr("data-intersect", "true")));
         let matches = divs
             .filter_map(parse_matches)
@@ -48,8 +51,8 @@ impl super::Hunter for SkyHunter {
 struct PartialMatch {
     team1: String,
     team2: String,
-    team1_goals: Option<usize>,
-    team2_goals: Option<usize>,
+    team1_score: Option<usize>,
+    team2_score: Option<usize>,
 }
 
 impl PartialMatch {
@@ -59,8 +62,8 @@ impl PartialMatch {
             date: String::from(date),
             team1: self.team1,
             team2: self.team2,
-            team1_score: self.team1_goals,
-            team2_score: self.team2_goals,
+            team1_score: self.team1_score,
+            team2_score: self.team2_score,
         }
     }
 }
@@ -112,13 +115,9 @@ fn extract_match_date(node: &Node) -> Option<String> {
         "{}-{:0>2}-{:0>2}",
         tokens.get(2).unwrap(),
         month_index,
-        tokens.get(0).unwrap()
+        tokens.first().unwrap()
     ))
 }
-
-static MONTHS: [&str; 12] = [
-    "Gen", "Feb", "Mar", "Apr", "Mag", "Giu", "Lug", "Ago", "Set", "Ott", "Nov", "Dic",
-];
 
 fn get_month_index(month: &str) -> Option<usize> {
     for (i, &m) in MONTHS.iter().enumerate() {
@@ -134,15 +133,13 @@ fn extract_partial_match(node: &Node) -> Option<PartialMatch> {
     let el_team1 = node.find(Class("ftbl__match-row__home")).next()?;
     let team1 = el_team1
         .find(Name("span").descendant(Name("span")))
-        .skip(2)
-        .next()?
+        .nth(2)?
         .text();
 
     let el_team2 = node.find(Class("ftbl__match-row__away")).next()?;
     let team2 = el_team2
         .find(Name("span").descendant(Name("span")))
-        .skip(2)
-        .next()?
+        .nth(2)?
         .text();
 
     let el_score = node.find(Class("ftbl__match-row__result")).next()?;
@@ -157,7 +154,7 @@ fn extract_partial_match(node: &Node) -> Option<PartialMatch> {
     Some(PartialMatch {
         team1,
         team2,
-        team1_goals,
-        team2_goals,
+        team1_score: team1_goals,
+        team2_score: team2_goals,
     })
 }

@@ -5,11 +5,9 @@ mod models;
 mod hunters;
 mod processors;
 
-use error::Error;
 use hunters::create_hunter;
 use processors::create_processor;
-
-pub type Result<T, E = Error> = std::result::Result<T, E>;
+use models::Result;
 
 #[derive(Debug, Parser)]
 #[clap(about = "puttanesca service", long_about = None)]

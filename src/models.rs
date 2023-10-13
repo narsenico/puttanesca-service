@@ -1,3 +1,4 @@
+use crate::error::Error;
 use std::fmt::Display;
 
 // TODO: manage date and time format (with struct?)
@@ -30,3 +31,5 @@ impl Display for Match {
         )
     }
 }
+
+pub type Result<T, E = Error> = std::result::Result<T, E>;

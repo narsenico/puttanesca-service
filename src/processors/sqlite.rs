@@ -1,4 +1,4 @@
-use crate::models::Match;
+use crate::{models::Match, hunters::Hunter};
 use crate::Result;
 use async_trait::async_trait;
 use rusqlite::{Connection, OpenFlags, OptionalExtension};
@@ -24,7 +24,7 @@ impl Processor for SqliteProcessor {
         String::from("Sqlite Processor")
     }
 
-    async fn process(&self, hunter: std::sync::Arc<dyn crate::hunters::Hunter>) -> Result<()> {
+    async fn process(&self, hunter: std::sync::Arc<dyn Hunter>) -> Result<()> {
         let conn = create_conn(&self.db_name, true)?;
         check_valid_connection(&conn)?;
 
@@ -94,7 +94,7 @@ fn prepare_db(conn: &Connection) -> Result<()> {
 
 fn get_version(conn: &Connection) -> Result<Option<usize>> {
     let sql_tversion_exists =
-        r##"SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type="table" AND name="tVersion")"##;
+        r#"SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type="table" AND name="tVersion")"#;
     let missing_table = conn.query_row(sql_tversion_exists, [], |row| row.get::<_, usize>(0))? == 0;
     if missing_table {
         return Ok(None);
