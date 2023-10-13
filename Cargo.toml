@@ -1,6 +1,6 @@
 [package]
 name = "puttanesca-service"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["J.F. Hots", "M.C.S. Piston"]
 edition = "2021"
 
