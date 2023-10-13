@@ -55,12 +55,12 @@ struct PartialMatch {
 impl PartialMatch {
     fn create_match(self, index: usize, date: &str) -> Match {
         Match {
-            index,
+            match_day: index,
             date: String::from(date),
             team1: self.team1,
             team2: self.team2,
-            team1_goals: self.team1_goals,
-            team2_goals: self.team2_goals,
+            team1_score: self.team1_goals,
+            team2_score: self.team2_goals,
         }
     }
 }

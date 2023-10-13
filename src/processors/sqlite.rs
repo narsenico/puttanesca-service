@@ -115,19 +115,18 @@ fn exec_migration(_conn: &Connection, _current_version: usize) -> Result<()> {
 }
 
 fn upsert_match(conn: &Connection, match_: &Match) -> Result<()> {
-    println!("upsert_match");
     let sql_match_insert = r#"
         INSERT OR REPLACE INTO tMatches (match_day,match_date,team1,team2,team1_score,team2_score) VALUES (?,?,?,?,?,?);
     "#;
     conn.execute(
         sql_match_insert,
         (
-            match_.index,
+            match_.match_day,
             &match_.date,
             &match_.team1,
             &match_.team2,
-            match_.team1_goals,
-            match_.team2_goals,
+            match_.team1_score,
+            match_.team2_score,
         ),
     )?;
 
