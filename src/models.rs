@@ -5,12 +5,12 @@ use std::fmt::Display;
 
 #[derive(Debug, Default, PartialEq)]
 pub struct Match {
-    pub match_day: usize,
-    pub match_date: String,
-    pub team1: String,
-    pub team2: String,
-    pub team1_score: Option<usize>,
-    pub team2_score: Option<usize>,
+    pub(crate) match_day: usize,
+    pub(crate) match_date: String,
+    pub(crate) team1: String,
+    pub(crate) team2: String,
+    pub(crate) team1_score: Option<usize>,
+    pub(crate) team2_score: Option<usize>,
 }
 
 impl Display for Match {
