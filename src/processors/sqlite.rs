@@ -1,4 +1,5 @@
 use crate::Result;
+use crate::models::Match;
 use async_trait::async_trait;
 use rusqlite::{Connection, OpenFlags};
 

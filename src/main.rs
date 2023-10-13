@@ -1,6 +1,7 @@
 use clap::{Parser, Subcommand};
 
 mod error;
+mod models;
 mod hunters;
 mod processors;
 
