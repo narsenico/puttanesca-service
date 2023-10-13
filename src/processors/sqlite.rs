@@ -1,5 +1,4 @@
-use crate::Result;
-use crate::{hunters::Hunter, models::Match};
+use crate::{hunters::Hunter, models::Match, Result};
 use async_trait::async_trait;
 use rusqlite::{Connection, OpenFlags, OptionalExtension};
 
@@ -122,7 +121,7 @@ fn upsert_match(conn: &Connection, match_: &Match) -> Result<()> {
         sql_match_insert,
         (
             match_.match_day,
-            &match_.match_date,
+            match_.match_date.to_string(),
             &match_.team1,
             &match_.team2,
             match_.team1_score,
@@ -140,7 +139,7 @@ mod tests {
     use rusqlite::{Connection, OpenFlags};
 
     use crate::{
-        models::Match,
+        models::{Match, MatchDate},
         processors::sqlite::{get_version, prepare_db, VERSION},
     };
 
@@ -209,7 +208,7 @@ mod tests {
         let matches = vec![
             Match {
                 match_day: 2,
-                match_date: "2000-01-01".to_string(),
+                match_date: MatchDate::from("2000-01-01").unwrap(),
                 team1: "Blue".to_string(),
                 team2: "Red".to_string(),
                 team1_score: None,
@@ -217,7 +216,7 @@ mod tests {
             },
             Match {
                 match_day: 2,
-                match_date: "2000-01-02".to_string(),
+                match_date: MatchDate::from("2000-01-02").unwrap(),
                 team1: "Blue".to_string(),
                 team2: "Red".to_string(),
                 team1_score: None,
@@ -232,19 +231,22 @@ mod tests {
         }
 
         // Assert
-        let m = conn.query_row(
-            "SELECT match_day,match_date,team1,team2,team1_score,team2_score FROM tMatches",
-            (),
-            |row| Ok(Match {
-                match_day: row.get(0).unwrap(),
-                match_date: row.get(1).unwrap(),
-                team1: row.get(2).unwrap(),
-                team2: row.get(3).unwrap(),
-                team1_score: row.get(4).unwrap(),
-                team2_score: row.get(5).unwrap(),
-            }),
-        )
-        .unwrap();
+        let m = conn
+            .query_row(
+                "SELECT match_day,match_date,team1,team2,team1_score,team2_score FROM tMatches",
+                (),
+                |row| {
+                    Ok(Match {
+                        match_day: row.get(0).unwrap(),
+                        match_date: MatchDate::from(row.get::<_, String>(1).unwrap()).unwrap(),
+                        team1: row.get(2).unwrap(),
+                        team2: row.get(3).unwrap(),
+                        team1_score: row.get(4).unwrap(),
+                        team2_score: row.get(5).unwrap(),
+                    })
+                },
+            )
+            .unwrap();
         assert_eq!(*matches.get(1).unwrap(), m);
     }
 }

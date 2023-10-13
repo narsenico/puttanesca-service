@@ -1,5 +1,4 @@
-use super::Match;
-use crate::Result;
+use crate::{models::Match, models::MatchDate, Result};
 use async_trait::async_trait;
 use reqwest::Client;
 use select::{
@@ -56,10 +55,10 @@ struct PartialMatch {
 }
 
 impl PartialMatch {
-    fn create_match(self, index: usize, date: &str) -> Match {
+    fn create_match(self, index: usize, date: MatchDate) -> Match {
         Match {
             match_day: index,
-            match_date: String::from(date),
+            match_date: date, 
             team1: self.team1,
             team2: self.team2,
             team1_score: self.team1_score,
@@ -75,7 +74,7 @@ fn parse_matches(node: Node) -> Option<Vec<Match>> {
     let mut matches = Vec::<Match>::new();
     let el_table_rows =
         node.find(Class("ftbl__results-table").descendant(Name("tbody").descendant(Name("tr"))));
-    let mut match_date: Option<String> = None;
+    let mut match_date: Option<MatchDate> = None;
 
     for row in el_table_rows {
         if row.is(Class("ftbl__match-data-row")) {
@@ -84,7 +83,7 @@ fn parse_matches(node: Node) -> Option<Vec<Match>> {
         }
 
         if row.is(Class("ftbl__match-row")) {
-            let md = match_date.as_ref()?;
+            let md = match_date.as_ref()?.clone();
             if let Some(partial_match) = extract_partial_match(&row) {
                 let m = partial_match.create_match(index, md);
                 matches.push(m);
@@ -100,7 +99,7 @@ fn extract_index(node: &Node) -> Option<usize> {
     el.text().split_once(' ')?.1.parse().ok()
 }
 
-fn extract_match_date(node: &Node) -> Option<String> {
+fn extract_match_date(node: &Node) -> Option<MatchDate> {
     // Sabato 19 Ago 2023
     let el = node.find(Name("td").descendant(Name("span"))).next()?;
     let text = el.text();
@@ -111,12 +110,13 @@ fn extract_match_date(node: &Node) -> Option<String> {
     }
 
     let month_index = get_month_index(tokens.get(1).unwrap())?;
-    Some(format!(
-        "{}-{:0>2}-{:0>2}",
-        tokens.get(2).unwrap(),
-        month_index,
-        tokens.first().unwrap()
-    ))
+    let match_date = MatchDate::new(
+        *tokens.get(2).unwrap(),
+        month_index.to_string(),
+        *tokens.first().unwrap()
+    );
+
+    Some(match_date)
 }
 
 fn get_month_index(month: &str) -> Option<usize> {

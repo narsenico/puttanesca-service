@@ -1,4 +1,8 @@
-use super::Match;
+use crate::{
+    models::{Match, MatchDate},
+    Result,
+};
+
 use async_trait::async_trait;
 
 pub struct TestHunter;
@@ -9,14 +13,14 @@ impl super::Hunter for TestHunter {
         String::from("Test Hunter")
     }
 
-    async fn find_matches(&self) -> crate::Result<Vec<Match>> {
+    async fn find_matches(&self) -> Result<Vec<Match>> {
         let matches = vec![Match {
             match_day: 0,
-            match_date: "2023-01-01".to_string(),
+            match_date: MatchDate::from("2023-01-01").unwrap(),
             team1: "Blue".to_string(),
             team2: "Red".to_string(),
             team1_score: None,
-            team2_score: None
+            team2_score: None,
         }];
 
         Ok(matches)
