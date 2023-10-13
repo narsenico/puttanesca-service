@@ -52,17 +52,21 @@ struct PartialMatch {
     team2: String,
     team1_score: Option<usize>,
     team2_score: Option<usize>,
+    team1_icon: Option<String>,
+    team2_icon: Option<String>,
 }
 
 impl PartialMatch {
     fn create_match(self, index: usize, date: MatchDate) -> Match {
         Match {
             match_day: index,
-            match_date: date, 
+            match_date: date,
             team1: self.team1,
             team2: self.team2,
             team1_score: self.team1_score,
             team2_score: self.team2_score,
+            team1_icon: self.team1_icon,
+            team2_icon: self.team2_icon,
         }
     }
 }
@@ -113,7 +117,7 @@ fn extract_match_date(node: &Node) -> Option<MatchDate> {
     let match_date = MatchDate::new(
         *tokens.get(2).unwrap(),
         month_index.to_string(),
-        *tokens.first().unwrap()
+        *tokens.first().unwrap(),
     );
 
     Some(match_date)
@@ -130,20 +134,28 @@ fn get_month_index(month: &str) -> Option<usize> {
 }
 
 fn extract_partial_match(node: &Node) -> Option<PartialMatch> {
-    let el_team1 = node.find(Class("ftbl__match-row__home")).next()?;
-    let team1 = el_team1
-        .find(Name("span").descendant(Name("span")))
-        .nth(2)?
-        .text();
+    let el_team1 = node
+        .find(Class("ftbl__match-row__home").descendant(Name("span").descendant(Name("span"))))
+        .next()?;
+    let team1 = el_team1.children().nth(2)?.text();
+    let team1_icon = el_team1
+        .find(Class("ftbl__team__icon-wrapper").descendant(Name("img")))
+        .next()?
+        .attr("src")
+        .map(|s| s.to_string());
 
-    let el_team2 = node.find(Class("ftbl__match-row__away")).next()?;
-    let team2 = el_team2
-        .find(Name("span").descendant(Name("span")))
-        .nth(2)?
-        .text();
+    let el_team2 = node
+        .find(Class("ftbl__match-row__away").descendant(Name("span").descendant(Name("span"))))
+        .next()?;
+    let team2 = el_team2.children().nth(2)?.text();
+    let team2_icon = el_team2
+        .find(Class("ftbl__team__icon-wrapper").descendant(Name("img")))
+        .next()?
+        .attr("src")
+        .map(|s| s.to_string());
 
     let el_score = node.find(Class("ftbl__match-row__result")).next()?;
-    let (team1_goals, team2_goals) = el_score
+    let (team1_score, team2_score) = el_score
         .find(Name("span"))
         .next()?
         .text()
@@ -154,7 +166,9 @@ fn extract_partial_match(node: &Node) -> Option<PartialMatch> {
     Some(PartialMatch {
         team1,
         team2,
-        team1_score: team1_goals,
-        team2_score: team2_goals,
+        team1_score,
+        team2_score,
+        team1_icon,
+        team2_icon,
     })
 }

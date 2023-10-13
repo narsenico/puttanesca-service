@@ -46,6 +46,8 @@ pub struct Match {
     pub(crate) team2: String,
     pub(crate) team1_score: Option<usize>,
     pub(crate) team2_score: Option<usize>,
+    pub(crate) team1_icon: Option<String>,
+    pub(crate) team2_icon: Option<String>,
 }
 
 impl Display for Match {

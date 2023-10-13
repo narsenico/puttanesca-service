@@ -4,7 +4,7 @@ use rusqlite::{Connection, OpenFlags, OptionalExtension};
 
 use super::Processor;
 
-const VERSION: usize = 1;
+const VERSION: usize = 2;
 
 pub struct SqliteProcessor {
     db_name: String,
@@ -83,6 +83,8 @@ fn prepare_db(conn: &Connection) -> Result<()> {
           match_date TEXT NOT NULL,
           team1_score INTEGER NULL,
           team2_score INTEGER NULL,
+          team1_icon TEXT NULL,
+          team2_icon TEXT NULL,
           PRIMARY KEY(team1, team2)
         )    
     "#;
@@ -108,14 +110,29 @@ fn get_version(conn: &Connection) -> Result<Option<usize>> {
     Ok(res)
 }
 
-fn exec_migration(_conn: &Connection, _current_version: usize) -> Result<()> {
+fn exec_migration(conn: &Connection, current_version: usize) -> Result<()> {
     // exec migration of database from current_version to VERSION
+
+    if current_version == 1 {
+        let sql_add_team1_icon = "ALTER TABLE tMatches ADD team1_icon TEXT NULL";
+        let sql_add_team2_icon = "ALTER TABLE tMatches ADD team2_icon TEXT NULL";
+        conn.execute(sql_add_team1_icon, ())?;
+        conn.execute(sql_add_team2_icon, ())?;
+    }
+
     Ok(())
 }
 
 fn upsert_match(conn: &Connection, match_: &Match) -> Result<()> {
     let sql_match_insert = r#"
-        INSERT OR REPLACE INTO tMatches (match_day,match_date,team1,team2,team1_score,team2_score) VALUES (?,?,?,?,?,?);
+        INSERT OR REPLACE INTO tMatches (
+            match_day,
+            match_date,
+            team1,team2,team1_score,
+            team2_score,
+            team1_icon,
+            team2_icon) 
+        VALUES (?,?,?,?,?,?,?,?);
     "#;
     conn.execute(
         sql_match_insert,
@@ -126,6 +143,8 @@ fn upsert_match(conn: &Connection, match_: &Match) -> Result<()> {
             &match_.team2,
             match_.team1_score,
             match_.team2_score,
+            &match_.team1_icon,
+            &match_.team2_icon,
         ),
     )?;
 
@@ -213,6 +232,8 @@ mod tests {
                 team2: "Red".to_string(),
                 team1_score: None,
                 team2_score: None,
+                team1_icon: None,
+                team2_icon: None,
             },
             Match {
                 match_day: 2,
@@ -221,6 +242,8 @@ mod tests {
                 team2: "Red".to_string(),
                 team1_score: None,
                 team2_score: None,
+                team1_icon: None,
+                team2_icon: None,
             },
         ];
 
@@ -233,7 +256,17 @@ mod tests {
         // Assert
         let m = conn
             .query_row(
-                "SELECT match_day,match_date,team1,team2,team1_score,team2_score FROM tMatches",
+                r#"SELECT 
+                    match_day,
+                    match_date,
+                    team1,
+                    team2,
+                    team1_score,
+                    team2_score,
+                    team1_icon, 
+                    team2_icon 
+                    FROM tMatches
+                "#,
                 (),
                 |row| {
                     Ok(Match {
@@ -243,6 +276,8 @@ mod tests {
                         team2: row.get(3).unwrap(),
                         team1_score: row.get(4).unwrap(),
                         team2_score: row.get(5).unwrap(),
+                        team1_icon: None,
+                        team2_icon: None,
                     })
                 },
             )

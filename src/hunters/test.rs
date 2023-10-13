@@ -21,6 +21,8 @@ impl super::Hunter for TestHunter {
             team2: "Red".to_string(),
             team1_score: None,
             team2_score: None,
+            team1_icon: None,
+            team2_icon: None,
         }];
 
         Ok(matches)
